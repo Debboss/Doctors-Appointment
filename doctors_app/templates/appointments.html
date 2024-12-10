@@ -1,0 +1,64 @@
+<!-- templates/appointments.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .appointments-list {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .appointments-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .appointments-list li {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            margin: 10px auto;
+            padding: 10px;
+            border-radius: 8px;
+            width: 80%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .appointments-list li span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h2>All Booked Appointments</h2>
+    
+    <div class="appointments-list">
+        <ul>
+            {% if appointments %}
+                {% for appointment in appointments %}
+                    <li>
+                        <span>Name:</span> {{ appointment.name }} <br>
+                        <span>Date:</span> {{ appointment.date }} <br>
+                        <span>Time:</span> {{ appointment.time }}
+                    </li>
+                {% endfor %}
+            {% else %}
+                <p>No appointments available.</p>
+            {% endif %}
+        </ul>
+    </div>
+</body>
+</html>

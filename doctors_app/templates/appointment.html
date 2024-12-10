@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book an Appointment</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+        
+        .form-container {
+            max-width: 500px;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            font-weight: bold;
+            color: #555;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            margin-top: 20px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .note {
+            font-size: 0.9rem;
+            color: #777;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .available-times {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Book an Appointment</h2>
+        <form action="{{ url_for('book_appointment') }}" method="POST">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="doctor">Choose a Doctor:</label>
+                <select id="doctor" name="doctor_id" class="form-control" required>
+                    {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="day">Day of the Week:</label>
+                <select id="day" name="day" class="form-control" required>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="time">Available Time:</label>
+                <select id="time" name="time" class="form-control" required>
+                    <!-- Available times will be injected here based on day selection -->
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Appointment</button>
+        </form>
+
+        <div class="note">
+            <p>Please ensure all details are correct before submitting.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const daySelect = document.getElementById('day');
+            const doctorSelect = document.getElementById('doctor');
+            const timeSelect = document.getElementById('time');
+
+            // Listen for day change event
+            daySelect.addEventListener('change', function () {
+                const doctorId = doctorSelect.value;
+                const day = this.value;
+
+                // Calculate the date for the chosen day of the week
+                const date = new Date();
+                const dayOfWeekMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4 };
+                date.setDate(date.getDate() + ((dayOfWeekMap[day] + 7 - date.getDay()) % 7));  // Calculate the next matching day
+
+                const formattedDate = date.toISOString().split('T')[0]; // Format date as 'YYYY-MM-DD'
+
+                // Fetch available time slots
+                fetch(`/get_availability/${doctorId}/${formattedDate}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        timeSelect.innerHTML = '';  // Clear previous options
+
+                        if (data.length > 0) {
+                            data.forEach(time => {
+                                const option = document.createElement('option');
+                                option.value = time.start;
+                                option.textContent = `${time.start} - ${time.end}`;
+                                timeSelect.appendChild(option);
+                            });
+                        } else {
+                            const option = document.createElement('option');
+                            option.textContent = 'No available times';
+                            timeSelect.appendChild(option);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching available times:', error);
+                        const option = document.createElement('option');
+                        option.textContent = 'Error loading available times';
+                        timeSelect.appendChild(option);
+                    });
+            });
+        });
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
