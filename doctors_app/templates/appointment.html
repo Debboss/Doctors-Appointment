@@ -104,49 +104,30 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const daySelect = document.getElementById('day');
-            const doctorSelect = document.getElementById('doctor');
-            const timeSelect = document.getElementById('time');
+        // Dynamically load available times based on selected doctor and day of the week
+        document.getElementById('day').addEventListener('change', function () {
+            const doctorId = document.getElementById('doctor').value;
+            const day = this.value;
 
-            // Listen for day change event
-            daySelect.addEventListener('change', function () {
-                const doctorId = doctorSelect.value;
-                const day = this.value;
+            fetch(`/get_available_times?doctor_id=${doctorId}&day=${day}`)
+                .then(response => response.json())
+                .then(data => {
+                    const timeSelect = document.getElementById('time');
+                    timeSelect.innerHTML = '';  // Clear previous options
 
-                // Calculate the date for the chosen day of the week
-                const date = new Date();
-                const dayOfWeekMap = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4 };
-                date.setDate(date.getDate() + ((dayOfWeekMap[day] + 7 - date.getDay()) % 7));  // Calculate the next matching day
-
-                const formattedDate = date.toISOString().split('T')[0]; // Format date as 'YYYY-MM-DD'
-
-                // Fetch available time slots
-                fetch(`/get_availability/${doctorId}/${formattedDate}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        timeSelect.innerHTML = '';  // Clear previous options
-
-                        if (data.length > 0) {
-                            data.forEach(time => {
-                                const option = document.createElement('option');
-                                option.value = time.start;
-                                option.textContent = `${time.start} - ${time.end}`;
-                                timeSelect.appendChild(option);
-                            });
-                        } else {
+                    if (data.available_times.length > 0) {
+                        data.available_times.forEach(time => {
                             const option = document.createElement('option');
-                            option.textContent = 'No available times';
+                            option.value = time;
+                            option.textContent = time;
                             timeSelect.appendChild(option);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching available times:', error);
+                        });
+                    } else {
                         const option = document.createElement('option');
-                        option.textContent = 'Error loading available times';
+                        option.textContent = 'No available times';
                         timeSelect.appendChild(option);
-                    });
-            });
+                    }
+                });
         });
     </script>
 
