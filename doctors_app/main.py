@@ -18,11 +18,11 @@ migrate = Migrate(app, db)
 class Doctor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    # Change backref to a different name, such as 'availabilities_list'
     availabilities = db.relationship('Availability', backref='doctor', lazy=True)
 
     def __repr__(self):
         return f'<Doctor {self.name}>'
-
 
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -42,18 +42,16 @@ class Availability(db.Model):
     start_time = db.Column(db.Time, nullable=False)         # Start time for the available slot
     end_time = db.Column(db.Time, nullable=False)           # End time for the available slot
 
+    doctor = db.relationship('Doctor', backref=db.backref('availabilities', lazy=True))
+
     def __repr__(self):
         return f"<Availability doctor_id={self.doctor_id} day={self.day_of_week} from {self.start_time} to {self.end_time}>"
-
 
 # Routes
 @app.route('/')
 def home():
     doctors = Doctor.query.all()
-    print(f"Doctors: {doctors}")  # Print fetched doctors to check
     return render_template('appointment.html', doctors=doctors)
-
-
 
 @app.route('/get_availability/<int:doctor_id>/<string:date>', methods=['GET'])
 def get_availability(doctor_id, date):
@@ -84,7 +82,6 @@ def get_availability(doctor_id, date):
             current_time += slot_duration
 
     return jsonify(available_slots)
-
 
 @app.route('/book_appointment', methods=['POST'])
 def book_appointment():
